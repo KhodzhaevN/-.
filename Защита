@@ -1,0 +1,122 @@
+import tkinter as tk
+from tkinter import messagebox, filedialog
+import time
+import threading
+
+def сортировка_пузырьком(nums):
+    """Функция сортировки пузырьком."""
+    n = len(nums)
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if nums[j] > nums[j + 1]:
+                nums[j], nums[j + 1] = nums[j + 1], nums[j]
+
+class ПриложениеСортировки:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Сортировка чисел")
+
+        # Переменные для ввода, списка и вывода
+        self.input_entry = tk.Entry(root, font=('Arial', 12))
+        self.sort_option = tk.StringVar(root)
+        self.sort_option.set("Сортировка пузырьком")  # По умолчанию выбрана сортировка пузырьком
+        self.direction_option = tk.StringVar(root)
+        self.direction_option.set("По возрастанию")  # По умолчанию выбрано по возрастанию
+        self.output_label = tk.Label(root, text="Отсортированная последовательность:", font=('Arial', 12, 'bold'))
+        self.time_label = tk.Label(root, text="Время сортировки:", font=('Arial', 12, 'bold'))
+        self.output_text = tk.Text(root, height=10, width=30, font=('Arial', 12), state=tk.DISABLED)
+
+        # Создание выпадающих списков
+        self.sort_options = ["Сортировка пузырьком", "Быстрая сортировка", "Сортировка слиянием"]
+        self.sort_dropdown = tk.OptionMenu(root, self.sort_option, *self.sort_options)
+        self.sort_dropdown.config(font=('Arial', 12))
+
+        self.direction_options = ["По возрастанию", "По убыванию"]
+        self.direction_dropdown = tk.OptionMenu(root, self.direction_option, *self.direction_options)
+        self.direction_dropdown.config(font=('Arial', 12))
+
+        # Кнопки и привязки к функциям
+        self.start_button = tk.Button(root, text="Старт", command=self.начать_сортировку, font=('Arial', 12, 'bold'))
+        self.save_button = tk.Button(root, text="Сохранить", command=self.сохранить_в_файл, font=('Arial', 12, 'bold'))
+
+        # Расположение элементов на экране
+        self.input_entry.pack(pady=10)
+        self.sort_dropdown.pack(pady=5)
+        self.direction_dropdown.pack(pady=5)
+        self.start_button.pack(pady=10)
+        self.save_button.pack(pady=5)
+        self.output_label.pack()
+        self.output_text.pack(pady=10)
+        self.time_label.pack()
+
+        # Показываем подсказку при наведении курсора на кнопку "Старт"
+        self.start_button.tooltip = tk.Label(root, text="Нажмите для начала сортировки", font=('Arial', 10))
+        self.start_button.tooltip.place_forget()  # Начинаем с скрытой подсказки
+        self.start_button.bind("<Enter>", self.show_tooltip)
+        self.start_button.bind("<Leave>", self.hide_tooltip)
+
+    def начать_сортировку(self):
+        # Получение введенной последовательности и выбранных опций
+        sequence_str = self.input_entry.get()
+        sort_method = self.sort_option.get()
+        direction = self.direction_option.get()
+
+        try:
+            # Преобразование строки в список чисел
+            nums = [int(num.strip()) for num in sequence_str.split(",")]
+
+            # Засекаем время начала сортировки
+            start_time = time.time()
+
+            # Выполняем сортировку
+            if direction == "По возрастанию":
+                сортировка_пузырьком(nums)
+            elif direction == "По убыванию":
+                сортировка_пузырьком(nums)
+                nums.reverse()
+
+            # Рассчитываем время, затраченное на сортировку
+            elapsed_time = time.time() - start_time
+
+            # Обновляем текстовое поле вывода
+            sorted_sequence_str = ", ".join(map(str, nums))
+            result_str = f"Отсортированная последовательность: {sorted_sequence_str}"
+            self.output_text.config(state=tk.NORMAL)  # Разрешаем редактирование текстового поля
+            self.output_text.delete(1.0, tk.END)  # Очищаем предыдущий вывод
+            self.output_text.insert(tk.END, result_str)  # Вставляем новый вывод
+            self.output_text.config(state=tk.DISABLED)  # Запрещаем редактирование текстового поля
+
+            # Выводим время затраченное на сортировку
+            self.time_label.config(text=f"Время сортировки: {elapsed_time:.6f} секунд")
+
+        except ValueError:
+            messagebox.showerror("Ошибка", "Неверный ввод. Пожалуйста, введите допустимую последовательность чисел.")
+
+    def сохранить_в_файл(self):
+        # Получение отсортированной последовательности
+        sorted_sequence = self.output_text.get("1.0", tk.END)
+
+        # Отображение диалогового окна для выбора файла для сохранения
+        file_path = tk.filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Текстовые файлы", "*.txt")])
+
+        if file_path:
+            try:
+                # Запись отсортированной последовательности в файл
+                with open(file_path, 'w') as file:
+                    file.write(sorted_sequence)
+                messagebox.showinfo("Успех", f"Отсортированная последовательность сохранена в файл: {file_path}")
+
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Произошла ошибка при сохранении файла: {str(e)}")
+
+    def show_tooltip(self, event):
+        self.start_button.tooltip.place(relx=0.5, rely=1.5, anchor='s')  # Отображаем подсказку
+
+    def hide_tooltip(self, event):
+        self.start_button.tooltip.place_forget()  # Скрываем подсказку
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ПриложениеСортировки(root)
+    root.mainloop()
+
